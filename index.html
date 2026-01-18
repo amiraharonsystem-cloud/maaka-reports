@@ -14,6 +14,7 @@
         .field { display: flex; flex-direction: column; }
         label { font-weight: bold; font-size: 13px; margin-bottom: 5px; color: var(--blue); }
         input, select { padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
+        .section-header { background: var(--blue); color: white; padding: 10px; margin-top: 20px; border-radius: 5px; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
         th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
         th { background: #e8eaf6; }
@@ -24,14 +25,14 @@
 <body>
 
 <div class="card">
-    <h2 style="text-align:center; color:var(--blue);">תעודת בדיקה - מעקה (1142)</h2>
+    <h2 style="text-align:center; color:var(--blue);">תעודת בדיקה - מעקה (ת"י 1142)</h2>
 
     <div class="setup-section">
         <div class="grid">
             <div class="field">
                 <label>1. בחר בודק:</label>
                 <select id="testerSelect" onchange="fetchData()">
-                    <option value="">-- בחר --</option>
+                    <option value="">-- בחר בודק --</option>
                     <option value="אמיר אהרון">אמיר אהרון</option>
                     <option value="סרגיי אוסוקרקו">סרגיי אוסוקרקו</option>
                     <option value="אנדריי רזיק">אנדריי רזיק</option>
@@ -47,32 +48,44 @@
     </div>
 
     <form id="reportForm">
+        <div class="section-header">פרטי מנהלה</div>
         <div class="grid">
             <div class="field"><label>שם המזמין:</label><input type="text" id="client"></div>
-            <div class="field"><label>כתובת:</label><input type="text" id="address"></div>
+            <div class="field"><label>כתובת האתר:</label><input type="text" id="address"></div>
             <div class="field"><label>מס' פרויקט:</label><input type="text" id="pNum"></div>
             <div class="field"><label>תאריך:</label><input type="date" id="date"></div>
         </div>
 
-        <h3>סעיף 2: העמסה אופקית</h3>
+        <div class="section-header">סעיף 1: בדיקות גאומטריה</div>
+        <table>
+            <tr><th>סעיף</th><th>תיאור</th><th>מדידה</th><th>מסקנה</th></tr>
+            <tr>
+                <td>7.2.4</td>
+                <td>גובה המעקה (מינימום 105 ס"מ)</td>
+                <td><input type="number" id="heightVal" class="num-in" value="105"></td>
+                <td><select id="heightStatus"><option>מתאים</option><option>לא מתאים</option></select></td>
+            </tr>
+        </table>
+
+        <div class="section-header">סעיף 2: העמסה אופקית (107-114)</div>
         <table>
             <tr><th>שלב</th><th>עומס (ק"ג)</th><th>תזוזה (מ"מ)</th><th>מסקנה</th></tr>
             <tr>
-                <td>מחצית (107)</td>
-                <td><input type="number" id="h107" class="num-in" readonly></td>
-                <td><input type="number" id="i107" class="num-in" oninput="calc()"></td>
+                <td>מחצית עומס (107)</td>
+                <td><input type="number" id="h107" class="num-in" readonly style="background:#eee"></td>
+                <td><input type="number" id="i107" class="num-in" step="0.01" oninput="calc()"></td>
                 <td><select><option>מתאים</option><option>לא מתאים</option></select></td>
             </tr>
             <tr>
-                <td>מלא (108)</td>
+                <td>עומס מלא (108)</td>
                 <td><input type="number" id="h108" class="num-in" oninput="updateH(); calc();"></td>
-                <td><input type="number" id="i108" class="num-in"></td>
+                <td><input type="number" id="i108" class="num-in" step="0.01"></td>
                 <td><select><option>מתאים</option><option>לא מתאים</option></select></td>
             </tr>
             <tr>
-                <td>ניצב (110)</td>
+                <td>עומס ניצב (110)</td>
                 <td><input type="number" id="h110" class="num-in"></td>
-                <td><input type="number" id="i110" class="num-in" oninput="calc()"></td>
+                <td><input type="number" id="i110" class="num-in" step="0.01" oninput="calc()"></td>
                 <td><select><option>מתאים</option><option>לא מתאים</option></select></td>
             </tr>
             <tr style="background:#e8f5e9">
@@ -82,7 +95,7 @@
             </tr>
         </table>
 
-        <button type="button" class="btn-excel" onclick="exportToExcel()">📥 הורד דוח אקסל סופי</button>
+        <button type="button" class="btn-excel" onclick="exportToExcel()">📥 הפק דוח אקסל סופי</button>
     </form>
 </div>
 
@@ -94,7 +107,7 @@
         const tester = document.getElementById('testerSelect').value;
         const sel = document.getElementById('projectSelect');
         if(!tester) return;
-        sel.innerHTML = '<option>טוען נתונים...</option>';
+        sel.innerHTML = '<option>מחפש בלו"ז...</option>';
         const first = tester.split(' ')[0];
         let found = [];
 
@@ -106,19 +119,19 @@
 
                 rows.forEach((row, i) => {
                     if(row.join(' ').includes(first)) {
-                        // אם השורה של השם ריקה בפרטים, קח משורה מתחת (למשל סרגיי שורה 95)
+                        // לוגיקה לסרגיי: אם השורה שלו ריקה, קח נתונים מהשורה הבאה (i+1)
                         let d = (row[3] && row[3].length > 1) ? row : rows[i+1];
-                        if(d && !d.join(' ').includes("בוטל")) {
+                        if(d && d[3] && !d.join(' ').includes("בוטל") && !d.join(' ').includes("נדחה")) {
                             found.push({ c: d[3], a: d[4], n: d[1], d: gid==='689162898'?'2026-01-18':'2026-01-19' });
                         }
                     }
                 });
             } catch(e) {}
         }
-        sel.innerHTML = found.length ? '<option value="">בחר פרויקט</option>' : '<option>אין עבודות</option>';
+        sel.innerHTML = found.length ? '<option value="">בחר פרויקט מהרשימה</option>' : '<option>לא נמצאו עבודות</option>';
         found.forEach(p => {
             let o = document.createElement('option');
-            o.text = `${p.d} | ${p.c}`;
+            o.text = `${p.d.split('-').reverse().join('.')} | ${p.c} - ${p.a}`;
             o.value = JSON.stringify(p);
             sel.appendChild(o);
         });
@@ -146,22 +159,25 @@
     }
 
     function exportToExcel() {
+        const pNum = document.getElementById('pNum').value || "Report";
         const data = [
-            ["תעודת בדיקה מעקה - ת\"י 1142"],
+            ["תעודת בדיקת מעקה - ת\"י 1142"],
             ["שם המזמין", document.getElementById('client').value],
             ["כתובת האתר", document.getElementById('address').value],
-            ["מספר פרויקט", document.getElementById('pNum').value],
-            ["תאריך", document.getElementById('date').value],
+            ["מספר פרויקט", pNum],
+            ["תאריך בדיקה", document.getElementById('date').value],
             [],
-            ["תוצאות בדיקה (סעיף 2)"],
-            ["עומס מחצית", document.getElementById('h107').value, "תזוזה", document.getElementById('i107').value],
-            ["עומס מלא", document.getElementById('h108').value, "תזוזה", document.getElementById('i108').value],
-            ["סכום תזוזות (114)", document.getElementById('totalI').value]
+            ["תוצאות בדיקה"],
+            ["סעיף", "תיאור", "מדידה", "מסקנה"],
+            ["7.2.4", "גובה המעקה", document.getElementById('heightVal').value, document.getElementById('heightStatus').value],
+            ["107", "עומס מחצית", document.getElementById('h107').value, document.getElementById('i107').value],
+            ["108", "עומס מלא", document.getElementById('h108').value, document.getElementById('i108').value],
+            ["114", "סכום תזוזות", "", document.getElementById('totalI').value]
         ];
         const ws = XLSX.utils.aoa_to_sheet(data);
         const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "דוח בדיקה");
-        XLSX.writeFile(wb, `Report_${document.getElementById('pNum').value}.xlsx`);
+        XLSX.utils.book_append_sheet(wb, ws, "Report");
+        XLSX.writeFile(wb, `Report_${pNum}.xlsx`);
     }
 </script>
 </body>
